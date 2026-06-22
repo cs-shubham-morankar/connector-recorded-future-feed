@@ -1,0 +1,501 @@
+{
+  "type": "workflow_collections",
+  "data": [
+    {
+      "@type": "WorkflowCollection",
+      "name": "Sample - Recorded Future Threat Intel Feed - 1.0.0",
+      "description": "Sample playbooks for Recorded Future Threat Intel Feed. Clone these into a separate collection before customizing \u2014 the sample collection is replaced on connector upgrade.",
+      "visible": true,
+      "uuid": "036bcc4b-12b7-5b7c-849f-a1c2ac9e6e9a",
+      "recordTags": [
+        "recorded-future-feed",
+        "ThreatIntel"
+      ],
+      "workflows": [
+        {
+          "@type": "Workflow",
+          "name": "Get Indicators",
+          "description": "Manually fetch indicators from Recorded Future Threat Intel Feed. Diagnostic / on-demand.",
+          "isActive": false,
+          "debug": true,
+          "parameters": [],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/3c31658d-baa7-56a3-83b9-bd9f82a7fb86",
+          "uuid": "92258831-750c-5d06-a156-9da87441d3df",
+          "recordTags": [
+            "recorded-future-feed"
+          ],
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "arguments": {
+                "route": "be3ad713-f17d-5ddd-b7bd-2970d1027f2a",
+                "title": "Recorded Future Threat Intel Feed: Get Indicators",
+                "resources": [
+                  "alerts"
+                ],
+                "inputVariables": [],
+                "step_variables": {
+                  "input": {
+                    "params": [],
+                    "records": "{{vars.input.records}}"
+                  }
+                },
+                "executeButtonText": "Fetch",
+                "noRecordExecution": true,
+                "singleRecordExecution": false
+              },
+              "top": "40",
+              "left": "40",
+              "stepType": "/api/3/workflow_step_types/f414d039-bb0d-4e59-9c39-a8f1e880b18a",
+              "uuid": "3c31658d-baa7-56a3-83b9-bd9f82a7fb86"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Fetch Indicators",
+              "arguments": {
+                "name": "Recorded Future Threat Intel Feed",
+                "config": "REPLACE_WITH_CONFIG_UUID",
+                "params": {
+                  "indicator_type": "ip"
+                },
+                "version": "1.0.0",
+                "connector": "recorded-future-feed",
+                "operation": "fetch_indicators",
+                "operationTitle": "Fetch Indicators",
+                "pickFromTenant": false,
+                "step_variables": []
+              },
+              "top": "200",
+              "left": "300",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "uuid": "381fc2ad-46e0-5799-829b-ec1ba362d87f"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> Fetch",
+              "sourceStep": "/api/3/workflow_steps/3c31658d-baa7-56a3-83b9-bd9f82a7fb86",
+              "targetStep": "/api/3/workflow_steps/381fc2ad-46e0-5799-829b-ec1ba362d87f",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "d5cef8c7-51d5-5156-968e-cc447d6c069f"
+            }
+          ]
+        },
+        {
+          "@type": "Workflow",
+          "name": "> Recorded Future Threat Intel Feed > Fetch and Create",
+          "description": "Fetch and create indicators from Recorded Future Threat Intel Feed. Called as a child workflow.",
+          "isActive": false,
+          "debug": true,
+          "parameters": [
+            "lastPullTime"
+          ],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/c9a52cff-eb07-5438-9391-1f317f0f9455",
+          "uuid": "1ad9f8e6-4a20-5995-bab5-a363308e3170",
+          "recordTags": [
+            "dataingestion",
+            "fetch",
+            "create",
+            "recorded-future-feed"
+          ],
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "arguments": {
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  },
+                  "_configuration_schema": "[{\"title\": \"Indicator Type\", \"name\": \"indicator_type\", \"type\": \"select\", \"required\": true, \"editable\": true, \"visible\": true, \"options\": [\"ip\", \"domain\", \"url\", \"hash\", \"vulnerability\"], \"value\": \"ip\", \"tooltip\": \"Recorded Future risklist to pull on each scheduled ingestion run.\"}, {\"title\": \"Risk Rule (Optional)\", \"name\": \"risk_rule\", \"type\": \"text\", \"required\": false, \"editable\": true, \"visible\": true, \"tooltip\": \"Optional Recorded Future risk rule name (e.g. 'cyberAttack', 'historicalThreatListMembership'). Leave blank to use the default master risklist for the chosen indicator type. Use the 'Get Risk Rules' action to discover valid rule names.\"}, {\"title\": \"Reputation\", \"name\": \"reputation\", \"type\": \"select\", \"required\": true, \"editable\": true, \"visible\": true, \"options\": [\"Good\", \"Suspicious\", \"Malicious\", \"No Reputation Available\", \"TBD\"], \"value\": \"Suspicious\", \"tooltip\": \"Default reputation applied to ingested indicators.\"}, {\"title\": \"TLP\", \"name\": \"tlp\", \"type\": \"select\", \"required\": false, \"editable\": true, \"visible\": true, \"options\": [\"Red\", \"Amber\", \"Green\", \"White\"], \"value\": \"Amber\", \"tooltip\": \"Default TLP marking applied to ingested indicators.\"}, {\"title\": \"Confidence\", \"name\": \"confidence\", \"type\": \"integer\", \"required\": false, \"editable\": true, \"visible\": true, \"value\": 75, \"validation\": {\"minlength\": 0, \"maxlength\": 100}, \"tooltip\": \"Default confidence score applied when the feed record does not carry one.\"}, {\"title\": \"Maximum Age (in days)\", \"name\": \"expiry\", \"type\": \"integer\", \"required\": false, \"editable\": true, \"visible\": true, \"value\": 30, \"tooltip\": \"Indicator expiry in days from ingestion time.\"}, {\"title\": \"Per-Run Limit (Optional)\", \"name\": \"limit\", \"type\": \"integer\", \"required\": false, \"editable\": true, \"visible\": true, \"tooltip\": \"Optional cap on indicators ingested per run. Leave blank to ingest the full risklist.\"}]"
+                }
+              },
+              "top": "40",
+              "left": "40",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62",
+              "uuid": "c9a52cff-eb07-5438-9391-1f317f0f9455"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Configuration",
+              "arguments": {
+                "indicator_type": "ip",
+                "risk_rule": "",
+                "reputation": "Suspicious",
+                "tlp": "Amber",
+                "confidence": 75,
+                "expiry": 30,
+                "limit": 0,
+                "tlp_map": "{'Red': {{'TrafficLightProtocol' | picklist('Red') }}, 'Amber': {{'TrafficLightProtocol' | picklist('Amber') }}, 'Green': {{'TrafficLightProtocol' | picklist('Green') }}, 'White': {{'TrafficLightProtocol' | picklist('White') }}}",
+                "reputation_map": "{'Good': {{'IndicatorReputation' | picklist('Good') }}, 'Malicious': {{'IndicatorReputation' | picklist('Malicious') }}, 'Suspicious': {{'IndicatorReputation' | picklist('Suspicious') }}, 'TBD': {{'IndicatorReputation' | picklist('TBD') }}, 'No Reputation Available': {{'IndicatorReputation' | picklist('No Reputation Available') }}}",
+                "type_of_feed_map": "{'ip': {{'ThreatIntelFeedType' | picklist('IPv4 Address') }}, 'domain': {{'ThreatIntelFeedType' | picklist('Domain') }}, 'url': {{'ThreatIntelFeedType' | picklist('URL') }}, 'hash': {{'ThreatIntelFeedType' | picklist('FileHash-SHA256') }}, 'vulnerability': {{'ThreatIntelFeedType' | picklist('CVE') }}}"
+              },
+              "top": "160",
+              "left": "40",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "01327f0f-f65c-5dc5-80f5-7f2a2e7d7eab"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Is Data Only For Mapping",
+              "arguments": {
+                "conditions": [
+                  {
+                    "option": "Yes For Mapping",
+                    "step_iri": "/api/3/workflow_steps/f8db5e39-2c99-5f62-8595-a3a2ec3ceb7f",
+                    "condition": "{{ vars.request.env_setup == true }}",
+                    "step_name": "Return Sample Data"
+                  },
+                  {
+                    "option": "No For Ingestion",
+                    "default": true,
+                    "step_iri": "/api/3/workflow_steps/c8289d9c-951c-5523-b569-2aceb55c3df4",
+                    "step_name": "Fetch Indicators"
+                  }
+                ]
+              },
+              "top": "300",
+              "left": "40",
+              "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
+              "uuid": "755a0510-f586-5640-8f6c-8521dd597958"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Return Sample Data",
+              "arguments": {
+                "data": "[\n  {\n    \"value\": \"192.0.2.1\",\n    \"type\": \"ip\",\n    \"score\": 80,\n    \"risk_string\": \"sample\"\n  },\n  {\n    \"value\": \"203.0.113.5\",\n    \"type\": \"ip\",\n    \"score\": 65,\n    \"risk_string\": \"sample\"\n  }\n]"
+              },
+              "top": "300",
+              "left": "320",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "f8db5e39-2c99-5f62-8595-a3a2ec3ceb7f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Fetch Indicators",
+              "arguments": {
+                "name": "Recorded Future Threat Intel Feed",
+                "config": "REPLACE_WITH_CONFIG_UUID",
+                "params": {
+                  "indicator_type": "{{vars.indicator_type}}",
+                  "risk_rule": "{{vars.risk_rule}}",
+                  "limit": "{{vars.limit}}"
+                },
+                "version": "1.0.0",
+                "connector": "recorded-future-feed",
+                "operation": "fetch_indicators",
+                "operationTitle": "Fetch Indicators",
+                "pickFromTenant": false,
+                "step_variables": []
+              },
+              "top": "300",
+              "left": "600",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "uuid": "c8289d9c-951c-5523-b569-2aceb55c3df4"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Build Feed List",
+              "arguments": {
+                "data": "{{vars.steps.Fetch_Indicators.indicators}}",
+                "currentPullTime": "{{ arrow.utcnow().isoformat() }}"
+              },
+              "top": "440",
+              "left": "600",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "2e7763e5-de78-5c56-904a-01ed49736935"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Create Record",
+              "arguments": {
+                "when": "{{vars.data | length > 0}}",
+                "for_each": {
+                  "item": "{{vars.data}}",
+                  "__bulk": true,
+                  "condition": "",
+                  "batch_size": 100
+                },
+                "resource": {
+                  "value": "{{vars.item.value}}",
+                  "typeOfFeed": "{{ vars.item.type | resolveRange(vars.type_of_feed_map) }}",
+                  "source": "Recorded Future Threat Intel Feed",
+                  "sourceId": "{{vars.item.value}}",
+                  "tLP": "{% if vars.tlp %}{{ vars.tlp | resolveRange(vars.tlp_map) }}{% else %}None{% endif %}",
+                  "reputation": "{% if vars.reputation %}{{ vars.reputation | resolveRange(vars.reputation_map) }}{% else %}None{% endif %}",
+                  "confidence": "{% if vars.confidence %}{{ vars.confidence }}{% else %}{{ (vars.item.score | int) }}{% endif %}",
+                  "expiresOn": "{% if vars.expiry %}{{ arrow.utcnow().int_timestamp + (vars.expiry | int)*24*60*60 }}{% else %}None{% endif %}",
+                  "sourceData": "{{vars.item | toJSON}}",
+                  "description": "{% if vars.item.risk_string %}Recorded Future Threat Intel Feed: {{vars.item.risk_string}}{% else %}Recorded Future Threat Intel Feed indicator{% endif %}",
+                  "__replace": ""
+                },
+                "_showJson": false,
+                "collection": "/api/ingest-feeds/threat_intel_feeds",
+                "__recommend": [],
+                "step_variables": []
+              },
+              "top": "560",
+              "left": "600",
+              "stepType": "/api/3/workflow_step_types/7b221880-716b-4726-a2ca-5e568d330b3e",
+              "uuid": "15a301b3-7bfd-54b1-ba18-40b2860560eb"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Save Result",
+              "arguments": {
+                "currentPullTime": "{{vars.currentPullTime}}"
+              },
+              "top": "680",
+              "left": "600",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "62453ba6-a7dd-5317-a934-6d0c88561bd6"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> Configuration",
+              "sourceStep": "/api/3/workflow_steps/c9a52cff-eb07-5438-9391-1f317f0f9455",
+              "targetStep": "/api/3/workflow_steps/01327f0f-f65c-5dc5-80f5-7f2a2e7d7eab",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "92caa89c-d56e-57cf-8610-9839feae0a17"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Configuration -> Decision",
+              "sourceStep": "/api/3/workflow_steps/01327f0f-f65c-5dc5-80f5-7f2a2e7d7eab",
+              "targetStep": "/api/3/workflow_steps/755a0510-f586-5640-8f6c-8521dd597958",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "8222d285-8d3f-5097-ae6d-18d39e0a4d2f"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Decision -> Sample",
+              "sourceStep": "/api/3/workflow_steps/755a0510-f586-5640-8f6c-8521dd597958",
+              "targetStep": "/api/3/workflow_steps/f8db5e39-2c99-5f62-8595-a3a2ec3ceb7f",
+              "label": "Yes For Mapping",
+              "isExecuted": false,
+              "uuid": "6f9bc2ca-6375-5507-81ba-837d7d50a112"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Decision -> Fetch",
+              "sourceStep": "/api/3/workflow_steps/755a0510-f586-5640-8f6c-8521dd597958",
+              "targetStep": "/api/3/workflow_steps/c8289d9c-951c-5523-b569-2aceb55c3df4",
+              "label": "No For Ingestion",
+              "isExecuted": false,
+              "uuid": "d8a2cc5e-ee92-53fe-8902-6c4867ee7efb"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Fetch -> Build",
+              "sourceStep": "/api/3/workflow_steps/c8289d9c-951c-5523-b569-2aceb55c3df4",
+              "targetStep": "/api/3/workflow_steps/2e7763e5-de78-5c56-904a-01ed49736935",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "9734fb7f-36fe-50dc-9cc5-d378f161f169"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Build -> Create",
+              "sourceStep": "/api/3/workflow_steps/2e7763e5-de78-5c56-904a-01ed49736935",
+              "targetStep": "/api/3/workflow_steps/15a301b3-7bfd-54b1-ba18-40b2860560eb",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "e170acc5-44dc-53ea-b6e3-4bc73d570be0"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Create -> Save",
+              "sourceStep": "/api/3/workflow_steps/15a301b3-7bfd-54b1-ba18-40b2860560eb",
+              "targetStep": "/api/3/workflow_steps/62453ba6-a7dd-5317-a934-6d0c88561bd6",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "e63b9e00-5f5c-55b9-8050-b9842c031dd4"
+            }
+          ]
+        },
+        {
+          "@type": "Workflow",
+          "name": "Recorded Future Threat Intel Feed > Ingest",
+          "description": "Scheduled ingestion orchestrator for Recorded Future Threat Intel Feed. Maintains per-install LastPullTime macro.",
+          "isActive": false,
+          "debug": true,
+          "parameters": [],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/f4b288ff-959d-57b4-91b6-de8718b44b50",
+          "uuid": "87cbbea6-03a4-5e11-9659-5bef0f3ecbff",
+          "recordTags": [
+            "dataingestion",
+            "ingest",
+            "recorded-future-feed"
+          ],
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "arguments": {
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  }
+                }
+              },
+              "top": "20",
+              "left": "20",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62",
+              "uuid": "f4b288ff-959d-57b4-91b6-de8718b44b50"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Configuration",
+              "arguments": {
+                "fetchTime": "0",
+                "pullTimeMacro": "RecordedFutureFeedLastPullTime_{{vars['audit_info']['cyops_playbook_iri'].split('/')[-1].replace('-','_')}}"
+              },
+              "top": "100",
+              "left": "180",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "12213f46-a4d5-59a3-a999-c6155687938e"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Get Macro Value",
+              "arguments": {
+                "params": {
+                  "iri": "/api/wf/api/dynamic-variable/?name={{vars.pullTimeMacro}}",
+                  "body": "",
+                  "method": "GET"
+                },
+                "version": "3.2.0",
+                "connector": "cyops_utilities",
+                "operation": "make_cyops_request",
+                "operationTitle": "FSR: Make FortiSOAR API Call",
+                "step_variables": []
+              },
+              "top": "180",
+              "left": "380",
+              "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
+              "uuid": "bfbef586-edc0-5c99-a8eb-c543a2f5573f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Extract Value from Response",
+              "arguments": {
+                "lastPullTime": "{% if (vars.steps.Get_Macro_Value.data['hydra:member'] | length) > 0 %}{{ vars.steps.Get_Macro_Value.data['hydra:member'][0].value }}{% else %}0{% endif %}"
+              },
+              "top": "260",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "uuid": "66e66a20-5ba7-5439-af7a-5662a28e4f79"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Fetch Indicators",
+              "arguments": {
+                "arguments": {
+                  "lastPullTime": "{{vars.lastPullTime}}"
+                },
+                "apply_async": false,
+                "step_variables": [],
+                "workflowReference": "/api/3/workflows/1ad9f8e6-4a20-5995-bab5-a363308e3170"
+              },
+              "top": "360",
+              "left": "760",
+              "stepType": "/api/3/workflow_step_types/74932bdc-b8b6-4d24-88c4-1a4dfbc524f3",
+              "uuid": "48375446-ad76-5dcf-ba65-57e9caaf8f42"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Update Pull Time",
+              "arguments": {
+                "params": {
+                  "macro": "{{vars.pullTimeMacro}}",
+                  "value": "{{vars.steps.Fetch_Indicators.currentPullTime}}"
+                },
+                "version": "3.2.0",
+                "connector": "cyops_utilities",
+                "operation": "updatemacro",
+                "operationTitle": "CyOPs: Update Macro",
+                "step_variables": []
+              },
+              "top": "460",
+              "left": "960",
+              "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
+              "uuid": "8be26bc7-c5f5-5026-bb39-371029f87d0c"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> Configuration",
+              "sourceStep": "/api/3/workflow_steps/f4b288ff-959d-57b4-91b6-de8718b44b50",
+              "targetStep": "/api/3/workflow_steps/12213f46-a4d5-59a3-a999-c6155687938e",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "1543acf9-b8e3-5e6e-b6e8-298b55561e25"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Configuration -> Get Macro",
+              "sourceStep": "/api/3/workflow_steps/12213f46-a4d5-59a3-a999-c6155687938e",
+              "targetStep": "/api/3/workflow_steps/bfbef586-edc0-5c99-a8eb-c543a2f5573f",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "7b6f41f1-47d7-5827-8d02-04011e209967"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Get Macro -> Extract",
+              "sourceStep": "/api/3/workflow_steps/bfbef586-edc0-5c99-a8eb-c543a2f5573f",
+              "targetStep": "/api/3/workflow_steps/66e66a20-5ba7-5439-af7a-5662a28e4f79",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "e05e2ad1-4199-5121-80b8-0ace2bea91c5"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Extract -> Invoke",
+              "sourceStep": "/api/3/workflow_steps/66e66a20-5ba7-5439-af7a-5662a28e4f79",
+              "targetStep": "/api/3/workflow_steps/48375446-ad76-5dcf-ba65-57e9caaf8f42",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "691bebde-42f8-5ae3-a862-54a0411b1705"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Invoke -> Update Macro",
+              "sourceStep": "/api/3/workflow_steps/48375446-ad76-5dcf-ba65-57e9caaf8f42",
+              "targetStep": "/api/3/workflow_steps/8be26bc7-c5f5-5026-bb39-371029f87d0c",
+              "label": null,
+              "isExecuted": false,
+              "uuid": "87c29576-990d-51d1-82cf-4c99253857c7"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "exported_tags": [
+    "ThreatIntel",
+    "create",
+    "dataingestion",
+    "fetch",
+    "ingest",
+    "recorded-future-feed"
+  ],
+  "_recipe": {
+    "kind": "threat-feed",
+    "connector": "recorded-future-feed",
+    "fetch_op": "fetch_indicators",
+    "incremental_param": null,
+    "notes": "Replace REPLACE_WITH_CONFIG_UUID with the connector instance UUID after import. This connector exposes no incremental cursor; the macro is plumbed structurally but unused. Dedup relies on `__replace: \"\"` in the IBF resource."
+  }
+}
