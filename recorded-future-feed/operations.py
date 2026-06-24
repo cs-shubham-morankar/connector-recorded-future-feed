@@ -60,6 +60,10 @@ class RecordedFutureClient(object):
             raise ConnectorError('Connection error: {}'.format(e))
         except requests.exceptions.Timeout as e:
             raise ConnectorError('Request timed out: {}'.format(e))
+        except requests.exceptions.RequestException as e:
+            raise ConnectorError('Request failed: {}'.format(e))
+        except Exception as e:
+            raise ConnectorError('Unexpected error while calling Recorded Future API: {}'.format(e))
         if resp.status_code == 401:
             raise ConnectorError('Unauthorized: invalid Recorded Future API token.')
         if resp.status_code == 403:
